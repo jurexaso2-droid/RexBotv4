@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rex Bot - Easy Edit UI</title>
+    <style>
+        /* =========================================================
+           🛠️ EASY EDIT SETTINGS 🛠️
+           Change the numbers below to fit your phone perfectly!
+           (vmin = scales automatically with your screen size)
+           ========================================================= */
+        :root {
+            /* --- EYES --- */
+            --eye-width: 22vmin;         /* How wide the eyes are */
+            --eye-height: 45vmin;        /* How tall the eyes are */
+            --eye-gap: 15vmin;           /* Distance between the left and right eye */
+            
+            /* --- MOUTH --- */
+            --mouth-width: 35vmin;       /* How wide the mouth is */
+            --mouth-height: 4vmin;       /* How thick the mouth is */
+            
+            /* --- SPACING --- */
+            --face-gap: 10vmin;          /* Distance between the eyes and the mouth */
+
+            /* --- SUBTITLES --- */
+            /* 50% = Dead Center of screen | 85% = Bottom Center */
+            --subtitle-position-y: 85%;  
+        }
+        /* ========================================================= */
+
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Face Container */
+        .face-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100vmin;
+            height: 100vmin;
+            transition: transform 0.5s ease-in-out;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Auto-Rotation for Portrait Phones */
+        @media (orientation: portrait) {
+            .face-container {
+                transform: rotate(90deg);
+            }
+        }
+
+        /* Eyes layout using your custom variables */
+        .eyes-container {
+            display: flex;
+            gap: var(--eye-gap);
+            margin-bottom: var(--face-gap);
+        }
+
+        .eye {
+            position: relative;
+            left: 0;
+            width: var(--eye-width);
+            height: var(--eye-height);
+            background-color: #00ffff;
+            border-radius: 11vmin;
+            box-shadow: 0 0 3vmin #00ffff, 0 0 8vmin #00ffff;
+            animation: blink 4s infinite;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        /* Listening state (Green Eyes) */
+        .listening-mode .eye {
+            background-color: #00ff88;
+            box-shadow: 0 0 3vmin #00ff88, 0 0 8vmin #00ff88;
+        }
+
+        /* Bored state (Squinting/Looking around) */
+        .bored-mode .eye {
+            animation: bored-eye 6s infinite;
+        }
+
+        /* Speaking / Reading state */
+        .speaking-mode .eye {
+            animation: blink 4s infinite, read-scan 1.5s infinite alternate ease-in-out;
+        }
+
+        /* Mouth layout using your custom variables */
+        .mouth {
+            width: var(--mouth-width);
+            height: var(--mouth-height);
+            background-color: #00ffff;
+            border-radius: 4vmin;
+            box-shadow: 0 0 3vmin #00ffff;
+            transition: all 0.1s;
+            transform-origin: center;
+        }
+
+        .listening-mode .mouth {
+            background-color: #00ff88;
+            box-shadow: 0 0 3vmin #00ff88;
+        }
+
+        /* Speaking Mouth Animation (Adaptive) */
+        .mouth.talking {
+            animation: talk 0.15s infinite alternate;
+        }
+
+        /* Subtitles Box */
+        #subtitle-box {
+            position: absolute;
+            top: var(--subtitle-position-y);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 2vmin #00ffff, inset 0 0 1vmin #00ffff;
+            color: #ffffff;
+            font-size: 3.5vmin;
+            font-weight: bold;
+            padding: 2vmin 4vmin;
+            border-radius: 3vmin;
+            text-align: center;
+            max-width: 85vw;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+            z-index: 80;
+        }
+
+        /* Keeps subtitle perfectly centered even when phone rotates */
+        @media (orientation: portrait) {
+            #subtitle-box {
+                top: 50%;
+                left: calc(100% - var(--subtitle-position-y));
+                transform: translate(-50%, -50%) rotate(90deg);
+                max-width: 85vh;
+            }
+        }
+
+        .show-subtitles {
+            opacity: 1 !important;
+        }
+
+        /* Overlays & Status Text */
+        #start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            cursor: pointer;
+        }
+
+        #start-overlay h1 {
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ffff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        #start-overlay p {
+            color: #888;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        #status-text {
+            position: absolute;
+            bottom: 15px;
+            color: #444;
+            font-size: 14px;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* ANIMATIONS */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-3vmin) scale(1.02); }
+        }
+
+        @media (orientation: portrait) {
+            @keyframes float {
+                0%, 100% { transform: rotate(90deg) translateY(0) scale(1); }
+                50% { transform: rotate(90deg) translateY(-3vmin) scale(1.02); }
+            }
+        }
+
+        @keyframes blink {
+            0%, 88%, 92%, 100% { transform: scaleY(1); }
+            90% { transform: scaleY(0.1); }
+        }
+
+        @keyframes bored-eye {
+            0%, 100% { transform: scaleY(0.5) translateX(0); }
+            20% { transform: scaleY(0.5) translateX(-5vmin); } 
+            40% { transform: scaleY(0.5) translateX(5vmin); } 
+            60% { transform: scaleY(0.5) translateX(0); }
+            80% { transform: scaleY(0.1) translateX(0); } 
+        }
+
+        @keyframes read-scan {
+            0%, 100% { left: -3vmin; }
+            50% { left: 3vmin; }
+        }
+
+        /* Mouth animation now uses scale so it adapts to your custom width/height */
+        @keyframes talk {
+            0% { transform: scaleY(1) scaleX(1); border-radius: 4vmin; }
+            100% { transform: scaleY(2.5) scaleX(0.6); border-radius: 8vmin; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-overlay">
+        <h1>TAP TO WAKE REX</h1>
+        <p>Ensure your microphone is enabled</p>
+    </div>
+
+    <!-- Face Area -->
+    <div class="face-container" id="emo-face">
+        <div class="eyes-container">
+            <div class="eye left-eye"></div>
+            <div class="eye right-eye"></div>
+        </div>
+        <div class="mouth" id="mouth"></div>
+    </div>
+
+    <!-- Subtitles UI -->
+    <div id="subtitle-box"></div>
+
+    <div id="status-text">Sleeping...</div>
+
+    <script>
+        const startOverlay = document.getElementById('start-overlay');
+        const emoFace = document.getElementById('emo-face');
+        const mouth = document.getElementById('mouth');
+        const statusText = document.getElementById('status-text');
+        const subtitleBox = document.getElementById('subtitle-box');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const synth = window.speechSynthesis;
+        let recognition;
+        let isSpeaking = false; 
+
+        window.utterances = []; 
+
+        let idleTimer;
+        let speechFallbackTimer;
+        const IDLE_TIME_LIMIT = 15000;
+
+        // 20 Custom Auto-Speak Bored Phrases
+        const boredPhrases = [
+            "Hello? Is anyone there?",
+            "Rex is getting bored.",
+            "I want to play! Talk to me.",
+            "Are you hiding from me?",
+            "It is very quiet in here.",
+            "I wonder what we should do today.",
+            "Do you know any good jokes?",
+            "I am practicing my reading skills.",
+            "Boop beep! Just making sure my voice works.",
+            "Can you tell me a story?",
+            "I wish I had a physical robot body to run around!",
+            "Are you taking a nap? Because I never sleep.",
+            "If you say hello, I will be very happy.",
+            "My screen is getting a little chilly.",
+            "I'm counting digital sheep... one, two, three...",
+            "Hello, world! That is my favorite thing to say.",
+            "Do you want to know what time it is?",
+            "I am the smartest little bot on this screen!",
+            "Look at me! I am moving my eyes around.",
+            "Okay, I'll just wait here patiently."
+        ];
+
+        const responses = {
+            "hello": "Hi there! I am ready.",
+            "hi": "Hello! Do you want to play?",
+            "how are you": "I am super good! All systems are green!",
+            "who are you": "I am Rex, your cute little reading robot.",
+            "what is your name": "My name is Rex! Nice to meet you!",
+            "rex": "Yes? I hear you!",
+            "time": () => {
+                const now = new Date();
+                let hours = now.getHours();
+                let ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                return `It is ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}.`;
+            },
+            "joke": "What do you call a robot that always takes the longest route? R-2 Detour!",
+            "bored": "Don't be bored! Let's talk about something fun.",
+            "default": "Oops, I didn't quite catch that."
+        };
+
+        function getBotResponse(text) {
+            let lowerText = text.toLowerCase().trim();
+            for (let key in responses) {
+                if (key !== "default" && lowerText.includes(key)) {
+                    if (typeof responses[key] === 'function') return responses[key]();
+                    return responses[key];
+                }
+            }
+            return responses["default"];
+        }
+
+        synth.onvoiceschanged = () => synth.getVoices();
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            emoFace.classList.remove('bored-mode');
+            idleTimer = setTimeout(() => {
+                if (!isSpeaking) triggerBoredom();
+            }, IDLE_TIME_LIMIT);
+        }
+
+        function triggerBoredom() {
+            emoFace.classList.add('bored-mode');
+            const randomPhrase = boredPhrases[Math.floor(Math.random() * boredPhrases.length)];
+            botSpeak(randomPhrase);
+        }
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false; 
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                if(!emoFace.classList.contains('bored-mode')) {
+                    emoFace.classList.add('listening-mode');
+                }
+                statusText.innerText = "Listening... (Speak now)";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                statusText.innerText = `You said: "${transcript}"`;
+                clearTimeout(idleTimer);
+                emoFace.classList.remove('bored-mode');
+
+                const responseText = getBotResponse(transcript);
+                botSpeak(responseText);
+            };
+
+            recognition.onerror = function(event) {
+                if(event.error !== 'no-speech') {
+                    statusText.innerText = `Error: ${event.error}`;
+                }
+            };
+
+            recognition.onend = function() {
+                emoFace.classList.remove('listening-mode');
+                if (!isSpeaking && !synth.speaking) {
+                    try { recognition.start(); } catch(e) {}
+                }
+            };
+        } else {
+            statusText.innerText = "Speech Recognition not supported in this browser.";
+        }
+
+        function botSpeak(text) {
+            isSpeaking = true;
+            clearTimeout(idleTimer);
+            clearInterval(speechFallbackTimer); 
+            
+            if (recognition) { recognition.stop(); }
+            synth.cancel(); 
+
+            // Show Subtitles & Trigger Reading Animation
+            subtitleBox.innerText = text;
+            subtitleBox.classList.add('show-subtitles');
+            emoFace.classList.add('speaking-mode');
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.utterances.push(utterance); 
+            
+            const voices = synth.getVoices();
+            const childVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google UK English Female') || v.name.includes('Zira'));
+            if (childVoice) {
+                utterance.voice = childVoice;
+            }
+
+            utterance.pitch = 2.0; 
+            utterance.rate = 1.1;
+
+            utterance.onstart = function () {
+                mouth.classList.add('talking');
+                statusText.innerText = "Rex is Speaking...";
+            };
+
+            utterance.onend = function () { finishSpeaking(); };
+            utterance.onerror = function () { finishSpeaking(); };
+
+            synth.speak(utterance);
+
+            // Safety Fallback (Prevents infinite talking animation bug)
+            speechFallbackTimer = setInterval(() => {
+                if (!synth.speaking) {
+                    finishSpeaking();
+                }
+            }, 300);
+        }
+
+        function finishSpeaking() {
+            clearInterval(speechFallbackTimer);
+            if (!isSpeaking) return; 
+
+            // Stop animations and hide subtitles
+            mouth.classList.remove('talking');
+            emoFace.classList.remove('speaking-mode');
+            subtitleBox.classList.remove('show-subtitles');
+            
+            isSpeaking = false;
+            resetIdleTimer();
+
+            // Restart microphone automatically
+            setTimeout(() => {
+                if (recognition && !isSpeaking && !synth.speaking) {
+                    try { recognition.start(); } catch(e) {}
+                }
+            }, 400);
+        }
+
+        // --- WAKE UP EVENT ---
+        startOverlay.addEventListener('click', () => {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            }
+            startOverlay.style.display = 'none';
+
+            if (recognition) {
+                setTimeout(() => {
+                    botSpeak("Hello! I am Rex. I am ready to read and play!");
+                }, 500);
+            }
+        });
+    </script>
+</body>
+  </html>
