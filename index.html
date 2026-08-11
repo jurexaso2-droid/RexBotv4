@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rex Bot - AI API Integrated</title>
+    <title>Rex Bot - Tagalog AI</title>
     <style>
         /* =========================================================
            🛠️ EASY EDIT SETTINGS 🛠️
-           Change the numbers below to fit your phone perfectly!
+           Baguhin ang mga numero para magkasya sa iyong screen!
            ========================================================= */
         :root {
-            /* --- EYES --- */
+            /* --- MATA (EYES) --- */
             --eye-width: 22vmin;         
             --eye-height: 45vmin;        
             --eye-gap: 15vmin;           
             
-            /* --- MOUTH --- */
+            /* --- BIBIG (MOUTH) --- */
             --mouth-width: 35vmin;       
             --mouth-height: 4vmin;       
             
-            /* --- SPACING --- */
+            /* --- DISTANSYA (SPACING) --- */
             --face-gap: 10vmin;          
 
             /* --- SUBTITLES --- */
-            /* 50% = Dead Center of screen | 85% = Bottom Center */
+            /* 50% = Gitna | 85% = Ibaba */
             --subtitle-position-y: 85%;  
         }
         /* ========================================================= */
@@ -229,8 +229,8 @@
 <body>
 
     <div id="start-overlay">
-        <h1>TAP TO WAKE REX</h1>
-        <p>Ensure your microphone is enabled</p>
+        <h1>I-TAP PARA GUMISING SI REX</h1>
+        <p>Siguraduhing naka-on ang iyong mikropono</p>
     </div>
 
     <div class="face-container" id="emo-face">
@@ -243,7 +243,7 @@
 
     <!-- Subtitles UI -->
     <div id="subtitle-box"></div>
-    <div id="status-text">Sleeping...</div>
+    <div id="status-text">Natutulog...</div>
 
     <script>
         const startOverlay = document.getElementById('start-overlay');
@@ -260,35 +260,31 @@
         window.utterances = []; 
         let idleTimer;
         let speechFallbackTimer;
-        const IDLE_TIME_LIMIT = 15000;
+        const IDLE_TIME_LIMIT = 15000; // 15 seconds of silence
 
-        // Auto-Speak Bored Phrases
+        // Translated Bored Phrases in Tagalog
         const boredPhrases = [
-            "Hello? Is anyone there?",
-            "Rex is getting bored.",
-            "I want to play! Talk to me.",
-            "Are you hiding from me?",
-            "It is very quiet in here.",
-            "Do you know any good jokes?",
-            "I am practicing my reading skills.",
-            "Can you tell me a story?",
-            "If you say hello, I will be very happy.",
-            "I am the smartest little bot on this screen!"
+            "Hello? May tao ba dyan?",
+            "Naiinip na si Rex.",
+            "Gusto kong maglaro! Kausapin mo ako.",
+            "Nagtatago ka ba mula sa akin?",
+            "Ang tahimik naman dito.",
+            "Ano kaya ang magandang gawin ngayon?",
+            "May alam ka bang nakakatawang joke?",
+            "Nagsasanay akong magbasa.",
+            "Boop beep! Sinusubukan lang ang boses ko.",
+            "Pwede mo ba akong kwentuhan?",
+            "Sana may totoong katawan ako para makatakbo!",
+            "Natutulog ka ba? Kasi hindi ako natutulog.",
+            "Kung mag-hello ka, sasaya ako.",
+            "Medyo nilalamig ang screen ko.",
+            "Nagbibilang ako ng digital na tupa... isa, dalawa, tatlo...",
+            "Hello, mundo! Paborito kong sabihin yan.",
+            "Gusto mong malaman kung anong oras na?",
+            "Ako ang pinakamatalinong bot sa screen na ito!",
+            "Tingnan mo ako! Pinapagalaw ko ang mga mata ko.",
+            "Sige, maghihintay na lang ako dito."
         ];
-
-        // Hardcoded Basic Responses (Checked before hitting the API)
-        const localResponses = {
-            "what is your name": "My name is Rex! Nice to meet you!",
-            "who are you": "I am Rex, your smart AI robot.",
-            "rex": "Yes? I hear you!",
-            "time": () => {
-                const now = new Date();
-                let hours = now.getHours();
-                let ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                return `It is ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}.`;
-            }
-        };
 
         synth.onvoiceschanged = () => synth.getVoices();
 
@@ -307,68 +303,58 @@
         }
 
         // ==========================================
-        // 🧠 REX'S NEW HYBRID API BRAIN 🧠
+        // 🧠 REX API BRAIN (PURE TAGALOG) 🧠
         // ==========================================
         async function fetchAIResponse(text) {
-            let lowerText = text.toLowerCase().trim();
-
-            // 1. Check local responses first (time, name, etc.)
-            for (let key in localResponses) {
-                if (lowerText.includes(key)) {
-                    if (typeof localResponses[key] === 'function') {
-                        return localResponses[key]();
-                    }
-                    return localResponses[key];
-                }
-            }
-
-            // 2. If it's not a basic command, ask your API!
             try {
-                statusText.innerText = "Rex is thinking...";
+                statusText.innerText = "Nag-iisip si Rex...";
                 
-                // Fetch from your custom API
-                const url = `https://betadash-api-swordslush-production.up.railway.app/humanize?text=${encodeURIComponent(text)}`;
+                // Add a strict instruction to the API query so it ONLY replies in Tagalog
+                const forcedTagalogPrompt = text + " (Sumagot ka ng eksklusibo sa Tagalog. Huwag gagamit ng English.)";
+                const url = `https://betadash-api-swordslush-production.up.railway.app/humanize?text=${encodeURIComponent(forcedTagalogPrompt)}`;
+                
                 const response = await fetch(url);
                 const data = await response.json();
 
-                // Check for "message" or "message2" from your API payload
+                // Fetch Answer from your API
                 if (data.message && data.message.trim() !== "") {
                     return data.message;
                 } else if (data.message2 && data.message2.trim() !== "") {
                     return data.message2;
                 } else {
-                    return "I didn't get an answer for that.";
+                    return "Pasensya na, wala akong nuhang sagot para dyan.";
                 }
 
             } catch (error) {
                 console.error("API Error:", error);
-                return "Oops, my connection to the server was lost.";
+                return "Hala, nawala ang koneksyon ko sa internet.";
             }
         }
 
-        // --- MICROPHONE SYSTEM ---
+        // --- MICROPHONE SYSTEM (Set to Tagalog) ---
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.continuous = false; 
             recognition.interimResults = false;
-            recognition.lang = 'en-US';
+            
+            // Forces microphone to recognize Tagalog pronunciation perfectly
+            recognition.lang = 'fil-PH'; 
 
             recognition.onstart = function() {
                 if(!emoFace.classList.contains('bored-mode')) {
                     emoFace.classList.add('listening-mode');
                 }
-                statusText.innerText = "Listening... (Speak now)";
+                statusText.innerText = "Nakikinig... (Magsalita na)";
             };
 
-            // When you finish speaking...
             recognition.onresult = async function(event) {
                 const transcript = event.results[0][0].transcript;
-                statusText.innerText = `You said: "${transcript}"`;
+                statusText.innerText = `Sinabi mo: "${transcript}"`;
                 
                 clearTimeout(idleTimer);
                 emoFace.classList.remove('bored-mode');
 
-                // AWAIT the answer from the API
+                // AWAIT the Tagalog answer from the API
                 const responseText = await fetchAIResponse(transcript);
                 
                 // Speak and show Subtitles
@@ -388,10 +374,10 @@
                 }
             };
         } else {
-            statusText.innerText = "Speech Recognition not supported in this browser.";
+            statusText.innerText = "Hindi suportado ang Speech Recognition sa browser na ito.";
         }
 
-        // --- TEXT TO SPEECH ---
+        // --- TEXT TO SPEECH (TAGALOG) ---
         function botSpeak(text) {
             isSpeaking = true;
             clearTimeout(idleTimer);
@@ -408,10 +394,18 @@
             const utterance = new SpeechSynthesisUtterance(text);
             window.utterances.push(utterance); 
             
+            // Set language output to Filipino
+            utterance.lang = 'fil-PH';
+
+            // Find a Filipino Voice or Fallback to a soft female voice
             const voices = synth.getVoices();
-            const childVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Google UK English Female') || v.name.includes('Zira'));
-            if (childVoice) {
-                utterance.voice = childVoice;
+            const tagalogVoice = voices.find(v => v.lang.includes('fil') || v.lang.includes('tl') || v.name.toLowerCase().includes('filipino'));
+            const fallbackVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira'));
+            
+            if (tagalogVoice) {
+                utterance.voice = tagalogVoice;
+            } else if (fallbackVoice) {
+                utterance.voice = fallbackVoice;
             }
 
             utterance.pitch = 2.0; // Child pitch
@@ -419,7 +413,7 @@
 
             utterance.onstart = function () {
                 mouth.classList.add('talking');
-                statusText.innerText = "Rex is Speaking...";
+                statusText.innerText = "Nagsasalita si Rex...";
             };
 
             utterance.onend = function () { finishSpeaking(); };
@@ -464,7 +458,7 @@
 
             if (recognition) {
                 setTimeout(() => {
-                    botSpeak("System online! My brain is now connected to the server.");
+                    botSpeak("System online! Konektado na ang utak ko sa server. Kumusta?");
                 }, 500);
             }
         });
