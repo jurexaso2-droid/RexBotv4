@@ -3,32 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rex Bot - Easy Edit UI</title>
+    <title>Rex Bot - AI API Integrated</title>
     <style>
         /* =========================================================
            🛠️ EASY EDIT SETTINGS 🛠️
            Change the numbers below to fit your phone perfectly!
-           (vmin = scales automatically with your screen size)
            ========================================================= */
         :root {
             /* --- EYES --- */
-            --eye-width: 42vmin;         /* How wide the eyes are */
-            --eye-height: 45vmin;        /* How tall the eyes are */
-            --eye-gap: 45vmin;           /* Distance between the left and right eye */
+            --eye-width: 22vmin;         
+            --eye-height: 45vmin;        
+            --eye-gap: 15vmin;           
             
             /* --- MOUTH --- */
-            --mouth-width: 45vmin;       /* How wide the mouth is */
-            --mouth-height: 4vmin;       /* How thick the mouth is */
+            --mouth-width: 35vmin;       
+            --mouth-height: 4vmin;       
             
             /* --- SPACING --- */
-            --face-gap: 30vmin;          /* Distance between the eyes and the mouth */
+            --face-gap: 10vmin;          
 
             /* --- SUBTITLES --- */
             /* 50% = Dead Center of screen | 85% = Bottom Center */
-            --subtitle-position-y: 90%;  
+            --subtitle-position-y: 85%;  
         }
         /* ========================================================= */
-
 
         * {
             box-sizing: border-box;
@@ -49,7 +47,6 @@
             align-items: center;
         }
 
-        /* Face Container */
         .face-container {
             display: flex;
             flex-direction: column;
@@ -61,14 +58,12 @@
             animation: float 4s ease-in-out infinite;
         }
 
-        /* Auto-Rotation for Portrait Phones */
         @media (orientation: portrait) {
             .face-container {
                 transform: rotate(90deg);
             }
         }
 
-        /* Eyes layout using your custom variables */
         .eyes-container {
             display: flex;
             gap: var(--eye-gap);
@@ -87,23 +82,19 @@
             transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
         }
 
-        /* Listening state (Green Eyes) */
         .listening-mode .eye {
             background-color: #00ff88;
             box-shadow: 0 0 3vmin #00ff88, 0 0 8vmin #00ff88;
         }
 
-        /* Bored state (Squinting/Looking around) */
         .bored-mode .eye {
             animation: bored-eye 6s infinite;
         }
 
-        /* Speaking / Reading state */
         .speaking-mode .eye {
             animation: blink 4s infinite, read-scan 1.5s infinite alternate ease-in-out;
         }
 
-        /* Mouth layout using your custom variables */
         .mouth {
             width: var(--mouth-width);
             height: var(--mouth-height);
@@ -119,7 +110,6 @@
             box-shadow: 0 0 3vmin #00ff88;
         }
 
-        /* Speaking Mouth Animation (Adaptive) */
         .mouth.talking {
             animation: talk 0.15s infinite alternate;
         }
@@ -130,7 +120,7 @@
             top: var(--subtitle-position-y);
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             border: 2px solid #00ffff;
             box-shadow: 0 0 2vmin #00ffff, inset 0 0 1vmin #00ffff;
             color: #ffffff;
@@ -146,7 +136,6 @@
             z-index: 80;
         }
 
-        /* Keeps subtitle perfectly centered even when phone rotates */
         @media (orientation: portrait) {
             #subtitle-box {
                 top: 50%;
@@ -160,7 +149,7 @@
             opacity: 1 !important;
         }
 
-        /* Overlays & Status Text */
+        /* Overlays */
         #start-overlay {
             position: absolute;
             top: 0;
@@ -193,7 +182,7 @@
         #status-text {
             position: absolute;
             bottom: 15px;
-            color: #444;
+            color: #666;
             font-size: 14px;
             text-align: center;
             width: 100%;
@@ -201,7 +190,6 @@
             z-index: 50;
         }
 
-        /* ANIMATIONS */
         @keyframes float {
             0%, 100% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-3vmin) scale(1.02); }
@@ -232,7 +220,6 @@
             50% { left: 3vmin; }
         }
 
-        /* Mouth animation now uses scale so it adapts to your custom width/height */
         @keyframes talk {
             0% { transform: scaleY(1) scaleX(1); border-radius: 4vmin; }
             100% { transform: scaleY(2.5) scaleX(0.6); border-radius: 8vmin; }
@@ -246,7 +233,6 @@
         <p>Ensure your microphone is enabled</p>
     </div>
 
-    <!-- Face Area -->
     <div class="face-container" id="emo-face">
         <div class="eyes-container">
             <div class="eye left-eye"></div>
@@ -257,7 +243,6 @@
 
     <!-- Subtitles UI -->
     <div id="subtitle-box"></div>
-
     <div id="status-text">Sleeping...</div>
 
     <script>
@@ -273,41 +258,28 @@
         let isSpeaking = false; 
 
         window.utterances = []; 
-
         let idleTimer;
         let speechFallbackTimer;
         const IDLE_TIME_LIMIT = 15000;
 
-        // 20 Custom Auto-Speak Bored Phrases
+        // Auto-Speak Bored Phrases
         const boredPhrases = [
             "Hello? Is anyone there?",
             "Rex is getting bored.",
             "I want to play! Talk to me.",
             "Are you hiding from me?",
             "It is very quiet in here.",
-            "I wonder what we should do today.",
             "Do you know any good jokes?",
             "I am practicing my reading skills.",
-            "Boop beep! Just making sure my voice works.",
             "Can you tell me a story?",
-            "I wish I had a physical robot body to run around!",
-            "Are you taking a nap? Because I never sleep.",
             "If you say hello, I will be very happy.",
-            "My screen is getting a little chilly.",
-            "I'm counting digital sheep... one, two, three...",
-            "Hello, world! That is my favorite thing to say.",
-            "Do you want to know what time it is?",
-            "I am the smartest little bot on this screen!",
-            "Look at me! I am moving my eyes around.",
-            "Okay, I'll just wait here patiently."
+            "I am the smartest little bot on this screen!"
         ];
 
-        const responses = {
-            "hello": "Hi there! I am ready.",
-            "hi": "Hello! Do you want to play?",
-            "how are you": "I am super good! All systems are green!",
-            "who are you": "I am Rex, your cute little reading robot.",
+        // Hardcoded Basic Responses (Checked before hitting the API)
+        const localResponses = {
             "what is your name": "My name is Rex! Nice to meet you!",
+            "who are you": "I am Rex, your smart AI robot.",
             "rex": "Yes? I hear you!",
             "time": () => {
                 const now = new Date();
@@ -315,22 +287,8 @@
                 let ampm = hours >= 12 ? 'PM' : 'AM';
                 hours = hours % 12 || 12;
                 return `It is ${hours}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}.`;
-            },
-            "joke": "What do you call a robot that always takes the longest route? R-2 Detour!",
-            "bored": "Don't be bored! Let's talk about something fun.",
-            "default": "Oops, I didn't quite catch that."
-        };
-
-        function getBotResponse(text) {
-            let lowerText = text.toLowerCase().trim();
-            for (let key in responses) {
-                if (key !== "default" && lowerText.includes(key)) {
-                    if (typeof responses[key] === 'function') return responses[key]();
-                    return responses[key];
-                }
             }
-            return responses["default"];
-        }
+        };
 
         synth.onvoiceschanged = () => synth.getVoices();
 
@@ -348,6 +306,47 @@
             botSpeak(randomPhrase);
         }
 
+        // ==========================================
+        // 🧠 REX'S NEW HYBRID API BRAIN 🧠
+        // ==========================================
+        async function fetchAIResponse(text) {
+            let lowerText = text.toLowerCase().trim();
+
+            // 1. Check local responses first (time, name, etc.)
+            for (let key in localResponses) {
+                if (lowerText.includes(key)) {
+                    if (typeof localResponses[key] === 'function') {
+                        return localResponses[key]();
+                    }
+                    return localResponses[key];
+                }
+            }
+
+            // 2. If it's not a basic command, ask your API!
+            try {
+                statusText.innerText = "Rex is thinking...";
+                
+                // Fetch from your custom API
+                const url = `https://betadash-api-swordslush-production.up.railway.app/humanize?text=${encodeURIComponent(text)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                // Check for "message" or "message2" from your API payload
+                if (data.message && data.message.trim() !== "") {
+                    return data.message;
+                } else if (data.message2 && data.message2.trim() !== "") {
+                    return data.message2;
+                } else {
+                    return "I didn't get an answer for that.";
+                }
+
+            } catch (error) {
+                console.error("API Error:", error);
+                return "Oops, my connection to the server was lost.";
+            }
+        }
+
+        // --- MICROPHONE SYSTEM ---
         if (SpeechRecognition) {
             recognition = new SpeechRecognition();
             recognition.continuous = false; 
@@ -361,13 +360,18 @@
                 statusText.innerText = "Listening... (Speak now)";
             };
 
-            recognition.onresult = function(event) {
+            // When you finish speaking...
+            recognition.onresult = async function(event) {
                 const transcript = event.results[0][0].transcript;
                 statusText.innerText = `You said: "${transcript}"`;
+                
                 clearTimeout(idleTimer);
                 emoFace.classList.remove('bored-mode');
 
-                const responseText = getBotResponse(transcript);
+                // AWAIT the answer from the API
+                const responseText = await fetchAIResponse(transcript);
+                
+                // Speak and show Subtitles
                 botSpeak(responseText);
             };
 
@@ -387,6 +391,7 @@
             statusText.innerText = "Speech Recognition not supported in this browser.";
         }
 
+        // --- TEXT TO SPEECH ---
         function botSpeak(text) {
             isSpeaking = true;
             clearTimeout(idleTimer);
@@ -409,7 +414,7 @@
                 utterance.voice = childVoice;
             }
 
-            utterance.pitch = 2.0; 
+            utterance.pitch = 2.0; // Child pitch
             utterance.rate = 1.1;
 
             utterance.onstart = function () {
@@ -459,7 +464,7 @@
 
             if (recognition) {
                 setTimeout(() => {
-                    botSpeak("Hello! I am Rex. I am ready to read and play!");
+                    botSpeak("System online! My brain is now connected to the server.");
                 }, 500);
             }
         });
